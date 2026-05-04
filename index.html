@@ -10,14 +10,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
 :root{--bg:#0d0520;--panel:rgba(255,255,255,.04);--border:rgba(255,255,255,.07);--blue:#00aaff;--green:#00ff88;--pink:#ff2d78;--gold:#ffd700;--orange:#ff6600;--purple:#aa55ff;--text:rgba(255,255,255,.85);--muted:rgba(255,255,255,.35)}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;font-size:14px;min-height:100%}
+html{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:14px;min-height:100%}
 body{padding:24px;max-width:1280px;margin:0 auto}
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center}
+#loginScreen.hidden{display:none}
+#loginBox{background:#1a0a35;border:1px solid rgba(0,170,255,.25);border-radius:12px;padding:40px 32px;width:min(360px,90vw);box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#loginBox h2{font-family:Arial Black,Arial,sans-serif;font-size:22px;font-weight:900;color:var(--blue);text-shadow:0 0 16px var(--blue);letter-spacing:-0.5px;margin-bottom:4px}
+#loginBox p{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.login-field input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:#fff;font-family:Arial,sans-serif;font-size:15px;padding:11px 14px;outline:none;-webkit-user-select:text;user-select:text}
+.login-field input:focus{border-color:var(--blue);box-shadow:0 0 10px rgba(0,170,255,.2)}
+#loginErr{font-size:11px;color:var(--pink);margin-bottom:12px;min-height:16px;letter-spacing:1px}
+#loginBtn{width:100%;background:var(--blue);color:#000;border:none;border-radius:4px;padding:12px;font-family:Arial Black,Arial,sans-serif;font-size:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:opacity .15s}
+#loginBtn:hover{opacity:.85}
 .header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px}
-.header h1{font-family:'Syne',sans-serif;font-size:clamp(20px,4vw,32px);font-weight:800;letter-spacing:-1px}
+.header h1{font-family:Arial Black,Arial,sans-serif;font-size:clamp(20px,4vw,32px);font-weight:900;letter-spacing:-1px}
 .header h1 span{color:var(--blue);text-shadow:0 0 20px var(--blue)}
 .header p{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:3px}
 .header-right{text-align:right}
-.refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:4px;cursor:pointer;transition:all .2s}
+.refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:4px;cursor:pointer;transition:all .2s}
 .refresh-btn:hover{border-color:var(--blue);color:var(--blue)}
 .last-update{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
 .status{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
@@ -29,15 +43,15 @@ body{padding:24px;max-width:1280px;margin:0 auto}
 @media(max-width:680px){.cards{grid-template-columns:repeat(2,1fr)}}
 .card{background:#1a0a35;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:18px;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.05) inset}
 .card .lbl{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.card .val{font-family:'Syne',sans-serif;font-size:clamp(22px,3vw,34px);font-weight:800;line-height:1;color:var(--a,var(--blue));text-shadow:0 0 18px var(--a,var(--blue))}
+.card .val{font-family:Arial Black,Arial,sans-serif;font-size:clamp(22px,3vw,34px);font-weight:900;line-height:1;color:var(--a,var(--blue));text-shadow:0 0 18px var(--a,var(--blue))}
 .card .sub{font-size:9px;color:var(--muted);margin-top:5px}
 .card.g{--a:var(--green)}.card.p{--a:var(--pink)}.card.go{--a:var(--gold)}.card.o{--a:var(--orange)}.card.pu{--a:var(--purple)}
 .tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
-.tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-radius:3px;cursor:pointer;transition:all .15s}
+.tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:Arial,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-radius:3px;cursor:pointer;transition:all .15s}
 .tab:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
 .tab.active{background:rgba(0,170,255,.1);border-color:var(--blue);color:var(--blue)}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px}
-.ptitle{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.ptitle{font-family:Arial Black,Arial,sans-serif;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 @media(max-width:680px){.two-col{grid-template-columns:1fr}}
@@ -50,18 +64,36 @@ th.r,td.r{text-align:right}
 tbody tr{border-top:1px solid var(--border);transition:background .12s}
 tbody tr:hover{background:rgba(255,255,255,.025)}
 td{padding:9px 10px;font-size:11px;vertical-align:middle}
-.ig{font-weight:700}.sc{color:var(--green);font-weight:700}.tm{color:var(--blue)}.lp{color:var(--purple)}.gm{color:var(--gold)}.dt{color:var(--muted);font-size:10px}
-.rk{color:var(--muted);font-size:10px;width:30px}
-.rk.r1{color:var(--gold);font-weight:700}.rk.r2{color:#c0c0c0;font-weight:700}.rk.r3{color:#cd7f32;font-weight:700}
+.ig{font-weight:700;font-family:Arial,sans-serif}.sc{color:var(--green);font-weight:900;font-family:Arial Black,Arial,sans-serif}.tm{color:var(--blue);font-family:Arial Black,Arial,sans-serif}.lp{color:var(--purple);font-family:Arial Black,Arial,sans-serif}.gm{color:var(--gold);font-family:Arial Black,Arial,sans-serif}.dt{color:var(--muted);font-size:10px;font-family:Arial,sans-serif}
+.rk{color:var(--muted);font-size:10px;width:30px;font-family:Arial Black,Arial,sans-serif}
+.rk.r1{color:var(--gold);font-weight:900}.rk.r2{color:#c0c0c0;font-weight:900}.rk.r3{color:#cd7f32;font-weight:900}
 .ch{position:relative;height:180px}
 .loading{color:var(--muted);font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:center;padding:28px;animation:pu 1.5s infinite}
 @keyframes pu{0%,100%{opacity:.3}50%{opacity:.8}}
 .empty{color:var(--muted);font-size:10px;letter-spacing:2px;text-align:center;padding:28px;text-transform:uppercase}
-.ga-link{display:inline-block;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.25);color:var(--blue);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:9px 20px;border-radius:3px;text-decoration:none;transition:all .2s;margin-top:6px}
+.ga-link{display:inline-block;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.25);color:var(--blue);font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:9px 20px;border-radius:3px;text-decoration:none;transition:all .2s;margin-top:6px}
 .ga-link:hover{background:rgba(0,170,255,.2)}
 </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div id="loginBox">
+    <h2>No Vuelvo A Caer</h2>
+    <p>Iván Hdez · Dashboard</p>
+    <div class="login-field">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="usuario" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••">
+    </div>
+    <div id="loginErr"></div>
+    <button id="loginBtn">Entrar →</button>
+  </div>
+</div>
 
 <div class="header">
   <div>
@@ -164,6 +196,28 @@ td{padding:9px 10px;font-size:11px;vertical-align:middle}
 </div>
 
 <script>
+// ── LOGIN ─────────────────────────────────────────────────────────
+const DASH_USER='ihernandez', DASH_PASS='6154';
+const _loggedIn = sessionStorage.getItem('dash_auth')==='1';
+if(_loggedIn) document.getElementById('loginScreen').classList.add('hidden');
+
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  if(u===DASH_USER && p===DASH_PASS){
+    sessionStorage.setItem('dash_auth','1');
+    document.getElementById('loginScreen').classList.add('hidden');
+    loadAll();
+  } else {
+    document.getElementById('loginErr').textContent='Usuario o contraseña incorrectos';
+    setTimeout(()=>document.getElementById('loginErr').textContent='',2500);
+  }
+}
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginPass').focus(); });
+
+// Only auto-load if already logged in
 const sb=supabase.createClient('https://szvvwgynkawqejqkpdwf.supabase.co','sb_publishable_YhOZ9CkXyFRlMwX6CuABAA_m-wROoH_');
 let allData=[],charts={};
 
@@ -295,8 +349,7 @@ function renderBars(){
   document.getElementById('barTime').innerHTML=buildBar(tT,tT[0]?.totalTime||1,p=>p.totalTime,fmtTime,'#ff6600');
 }
 
-loadAll();
-setInterval(loadAll,60000);
+if(_loggedIn) { loadAll(); setInterval(loadAll,60000); }
 </script>
 </body>
 </html>
