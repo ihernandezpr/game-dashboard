@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — No Vuelvo A Caer</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+:root{--bg:#0d0520;--panel:rgba(255,255,255,.04);--border:rgba(255,255,255,.07);--blue:#00aaff;--green:#00ff88;--pink:#ff2d78;--gold:#ffd700;--orange:#ff6600;--purple:#aa55ff;--text:rgba(255,255,255,.85);--muted:rgba(255,255,255,.35)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;font-size:14px;min-height:100%}
+body{padding:24px;max-width:1280px;margin:0 auto}
+.header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px}
+.header h1{font-family:'Syne',sans-serif;font-size:clamp(20px,4vw,32px);font-weight:800;letter-spacing:-1px}
+.header h1 span{color:var(--blue);text-shadow:0 0 20px var(--blue)}
+.header p{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.header-right{text-align:right}
+.refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:4px;cursor:pointer;transition:all .2s}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue)}
+.last-update{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.sdot{width:6px;height:6px;border-radius:50%;background:#444}
+.sdot.ok{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
+.sdot.err{background:var(--pink)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+@media(max-width:680px){.cards{grid-template-columns:repeat(2,1fr)}}
+.card{background:#1a0a35;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:18px;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.05) inset}
+.card .lbl{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.card .val{font-family:'Syne',sans-serif;font-size:clamp(22px,3vw,34px);font-weight:800;line-height:1;color:var(--a,var(--blue));text-shadow:0 0 18px var(--a,var(--blue))}
+.card .sub{font-size:9px;color:var(--muted);margin-top:5px}
+.card.g{--a:var(--green)}.card.p{--a:var(--pink)}.card.go{--a:var(--gold)}.card.o{--a:var(--orange)}.card.pu{--a:var(--purple)}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-radius:3px;cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+.tab.active{background:rgba(0,170,255,.1);border-color:var(--blue);color:var(--blue)}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px}
+.ptitle{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:680px){.two-col{grid-template-columns:1fr}}
+.tw{overflow-x:auto;max-height:420px;overflow-y:auto}
+.tw::-webkit-scrollbar{width:3px;height:3px}
+.tw::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding:0 10px 10px;text-align:left;position:sticky;top:0;background:#0d0520;z-index:1;white-space:nowrap}
+th.r,td.r{text-align:right}
+tbody tr{border-top:1px solid var(--border);transition:background .12s}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+td{padding:9px 10px;font-size:11px;vertical-align:middle}
+.ig{font-weight:700}.sc{color:var(--green);font-weight:700}.tm{color:var(--blue)}.lp{color:var(--purple)}.gm{color:var(--gold)}.dt{color:var(--muted);font-size:10px}
+.rk{color:var(--muted);font-size:10px;width:30px}
+.rk.r1{color:var(--gold);font-weight:700}.rk.r2{color:#c0c0c0;font-weight:700}.rk.r3{color:#cd7f32;font-weight:700}
+.ch{position:relative;height:180px}
+.loading{color:var(--muted);font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:center;padding:28px;animation:pu 1.5s infinite}
+@keyframes pu{0%,100%{opacity:.3}50%{opacity:.8}}
+.empty{color:var(--muted);font-size:10px;letter-spacing:2px;text-align:center;padding:28px;text-transform:uppercase}
+.ga-link{display:inline-block;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.25);color:var(--blue);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:9px 20px;border-radius:3px;text-decoration:none;transition:all .2s;margin-top:6px}
+.ga-link:hover{background:rgba(0,170,255,.2)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>No Vuelvo A Caer — <span>The Game</span></h1>
+    <p style="color:var(--blue);text-shadow:0 0 10px var(--blue)">Iván Hdez · Estadísticas en tiempo real</p>
+  </div>
+  <div class="header-right">
+    <button class="refresh-btn" onclick="loadAll()">↺ Actualizar</button>
+    <div class="last-update" id="lastUpdate">—</div>
+    <div class="status"><span class="sdot" id="sdot"></span><span id="stext">conectando...</span></div>
+  </div>
+</div>
+
+<!-- FILA 1: Jugadores únicos · Total partidas · Tiempo total acumulado · Duración promedio -->
+<div class="cards">
+  <div class="card go"> <div class="lbl">Jugadores únicos</div>      <div class="val" id="cUnique">—</div>     <div class="sub">@usuarios distintos</div></div>
+  <div class="card">    <div class="lbl">Total partidas</div>         <div class="val" id="cTotal">—</div>      <div class="sub">registradas</div></div>
+  <div class="card o">  <div class="lbl">Tiempo total acumulado</div> <div class="val" id="cTotalTime">—</div>  <div class="sub">todos los jugadores</div></div>
+  <div class="card">    <div class="lbl">Duración promedio</div>      <div class="val" id="cAvgTime">—</div>    <div class="sub">por partida</div></div>
+</div>
+<!-- FILA 2: Loops fondo total · Loops promedio · Score más alto · Score promedio -->
+<div class="cards">
+  <div class="card pu"> <div class="lbl">Loops fondo total</div>      <div class="val" id="cTotalLoops">—</div> <div class="sub">veces completado</div></div>
+  <div class="card pu"> <div class="lbl">Loops promedio</div>          <div class="val" id="cAvgLoops">—</div>  <div class="sub">por jugador</div></div>
+  <div class="card g">  <div class="lbl">Score más alto</div>          <div class="val" id="cMaxScore">—</div>   <div class="sub" id="cMaxPlayer">—</div></div>
+  <div class="card p">  <div class="lbl">Score promedio</div>          <div class="val" id="cAvgScore">—</div>   <div class="sub">por partida</div></div>
+</div>
+<div style="margin-bottom:24px"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('top')">🏆 Top 10</button>
+  <button class="tab" onclick="showTab('players')">👤 Por Jugador</button>
+  <button class="tab" onclick="showTab('history')">📋 Historial</button>
+  <button class="tab" onclick="showTab('charts')">📊 Gráficas</button>
+  <button class="tab" onclick="showTab('ga')">📈 Analytics</button>
+</div>
+
+<div id="tab-top">
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--gold);box-shadow:0 0 8px var(--gold)"></span>Top 10 — Mejor score por jugador</div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>@Usuario</th><th class="r">Mejor score</th><th class="r">Tiempo total</th><th class="r">Loops fondo</th><th class="r">Partidas</th></tr></thead>
+      <tbody id="tbTop"><tr><td colspan="6"><div class="loading">cargando...</div></td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div id="tab-players" style="display:none">
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--blue);box-shadow:0 0 8px var(--blue)"></span>Estadísticas acumuladas por jugador</div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>@Usuario</th><th class="r">Partidas</th><th class="r">Mejor score</th>
+        <th class="r">Score total</th><th class="r">Tiempo total</th>
+        <th class="r">Tiempo promedio</th><th class="r">Loops total</th><th class="r">Loops promedio</th>
+      </tr></thead>
+      <tbody id="tbPlayers"><tr><td colspan="8"><div class="loading">cargando...</div></td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div id="tab-history" style="display:none">
+  <div class="panel">
+    <div class="ptitle"><span class="dot" style="background:var(--pink);box-shadow:0 0 8px var(--pink)"></span>Historial completo de partidas</div>
+    <div class="tw"><table>
+      <thead><tr><th>@Usuario</th><th class="r">Score</th><th class="r">Duración</th><th class="r">Loops fondo</th><th class="r">Fecha y hora</th></tr></thead>
+      <tbody id="tbHistory"><tr><td colspan="5"><div class="loading">cargando...</div></td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div id="tab-charts" style="display:none">
+  <div class="two-col">
+    <div class="panel">
+      <div class="ptitle"><span class="dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></span>Distribución de scores</div>
+      <div class="ch"><canvas id="chScores"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle"><span class="dot" style="background:var(--orange);box-shadow:0 0 8px var(--orange)"></span>Distribución de duración</div>
+      <div class="ch"><canvas id="chTime"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle"><span class="dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple)"></span>Top jugadores — loops del fondo acumulados</div>
+      <div id="barLoops"><div class="loading">cargando...</div></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle"><span class="dot" style="background:var(--orange);box-shadow:0 0 8px var(--orange)"></span>Top jugadores — tiempo acumulado</div>
+      <div id="barTime"><div class="loading">cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-ga" style="display:none">
+  <div class="panel" style="text-align:center;padding:40px 20px">
+    <div style="font-size:40px;margin-bottom:16px;opacity:.4">📊</div>
+    <div style="font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;line-height:2;margin-bottom:8px">Visitas · Usuarios activos · Eventos<br>partida_iniciada · partida_perdida</div>
+    <a class="ga-link" href="https://analytics.google.com" target="_blank">Abrir Google Analytics →</a>
+    <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:10px">ID: G-LDGCZ2PJMD</div>
+  </div>
+</div>
+
+<script>
+const sb=supabase.createClient('https://szvvwgynkawqejqkpdwf.supabase.co','sb_publishable_YhOZ9CkXyFRlMwX6CuABAA_m-wROoH_');
+let allData=[],charts={};
+
+function fmtTime(s){if(!s||s<=0)return'—';if(s<60)return s+'s';const m=Math.floor(s/60),r=s%60;if(m<60)return`${m}m ${r}s`;return`${Math.floor(m/60)}h ${m%60}m`;}
+function fmtDT(ts){if(!ts)return'—';return new Date(ts).toLocaleString('es-DO',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function fmtD(ts){if(!ts)return'—';return new Date(ts).toLocaleString('es-DO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+
+function showTab(n){
+  ['top','players','history','charts','ga'].forEach(t=>document.getElementById('tab-'+t).style.display=t===n?'':'none');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['top','players','history','charts','ga'][i]===n));
+}
+
+function byPlayer(){
+  const map={};
+  allData.forEach(r=>{
+    const k=(r.jugador||'anónimo').toLowerCase();
+    if(!map[k])map[k]={jugador:r.jugador||'anónimo',games:0,bestScore:0,totalScore:0,totalTime:0,totalLoops:0};
+    const m=map[k];m.games++;m.bestScore=Math.max(m.bestScore,r.score||0);
+    m.totalScore+=(r.score||0);m.totalTime+=(r.duration_seconds||0);m.totalLoops+=(r.bg_loops||0);
+  });
+  return Object.values(map);
+}
+
+async function loadAll(){
+  document.getElementById('sdot').className='sdot';document.getElementById('stext').textContent='cargando...';
+  const{data,error}=await sb.from('scores').select('jugador,score,duration_seconds,bg_loops,created_at').order('created_at',{ascending:false}).limit(1000);
+  if(error){document.getElementById('sdot').className='sdot err';document.getElementById('stext').textContent='error de conexión';return;}
+  allData=data||[];
+  document.getElementById('sdot').className='sdot ok';
+  document.getElementById('stext').textContent=`conectado · ${allData.length} registros`;
+  document.getElementById('lastUpdate').textContent='Actualizado: '+new Date().toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  renderCards();renderTop10();renderPlayers();renderHistory();renderCharts();renderBars();
+}
+
+function renderCards(){
+  const n=allData.length;if(!n)return;
+  const scores=allData.map(r=>r.score||0);
+  const times=allData.map(r=>r.duration_seconds||0);
+  const loops=allData.map(r=>r.bg_loops||0);
+  const maxScore=Math.max(...scores);
+  const totalTime=times.reduce((a,b)=>a+b,0);
+  const totalLoops=loops.reduce((a,b)=>a+b,0);
+  const unique=new Set(allData.map(r=>(r.jugador||'').toLowerCase())).size;
+  const avgLoops=(totalLoops/n).toFixed(1);
+  document.getElementById('cTotal').textContent=n.toLocaleString();
+  document.getElementById('cMaxScore').textContent=maxScore.toLocaleString();
+  document.getElementById('cMaxPlayer').textContent='@'+(allData.find(r=>r.score===maxScore)?.jugador||'—');
+  document.getElementById('cAvgScore').textContent=Math.round(scores.reduce((a,b)=>a+b,0)/n).toLocaleString();
+  document.getElementById('cUnique').textContent=unique.toLocaleString();
+  document.getElementById('cTotalTime').textContent=fmtTime(totalTime);
+  document.getElementById('cTotalLoops').textContent=totalLoops.toLocaleString();
+  document.getElementById('cAvgLoops').textContent=avgLoops+'x';
+  document.getElementById('cAvgTime').textContent=fmtTime(Math.round(totalTime/n));
+}
+
+function renderTop10(){
+  const pl=byPlayer().sort((a,b)=>b.bestScore-a.bestScore).slice(0,10);
+  const medals=['🥇','🥈','🥉'];
+  const tb=document.getElementById('tbTop');
+  if(!pl.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">Sin datos aún</div></td></tr>';return;}
+  tb.innerHTML=pl.map((p,i)=>`<tr>
+    <td class="rk ${i<3?'r'+(i+1):''}">${i<3?medals[i]:'#'+(i+1)}</td>
+    <td class="ig">@${p.jugador}</td>
+    <td class="r sc">${p.bestScore.toLocaleString()}</td>
+    <td class="r tm">${fmtTime(p.totalTime)}</td>
+    <td class="r lp">${p.totalLoops.toLocaleString()}x</td>
+    <td class="r gm">${p.games}</td>
+  </tr>`).join('');
+}
+
+function renderPlayers(){
+  const pl=byPlayer().sort((a,b)=>b.games-a.games);
+  const tb=document.getElementById('tbPlayers');
+  if(!pl.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">Sin datos aún</div></td></tr>';return;}
+  tb.innerHTML=pl.map(p=>`<tr>
+    <td class="ig">@${p.jugador}</td>
+    <td class="r gm">${p.games}</td>
+    <td class="r sc">${p.bestScore.toLocaleString()}</td>
+    <td class="r">${p.totalScore.toLocaleString()}</td>
+    <td class="r tm">${fmtTime(p.totalTime)}</td>
+    <td class="r tm">${fmtTime(Math.round(p.totalTime/p.games))}</td>
+    <td class="r lp">${p.totalLoops.toLocaleString()}x</td>
+    <td class="r lp">${Math.round(p.totalLoops/p.games)}x</td>
+  </tr>`).join('');
+}
+
+function renderHistory(){
+  const tb=document.getElementById('tbHistory');
+  if(!allData.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">Sin datos aún</div></td></tr>';return;}
+  tb.innerHTML=allData.slice(0,200).map(r=>`<tr>
+    <td class="ig">@${r.jugador||'anónimo'}</td>
+    <td class="r sc">${(r.score||0).toLocaleString()}</td>
+    <td class="r tm">${fmtTime(r.duration_seconds)}</td>
+    <td class="r lp">${(r.bg_loops||0)}x</td>
+    <td class="r dt">${fmtD(r.created_at)}</td>
+  </tr>`).join('');
+}
+
+function mkChart(id,labels,values,color){
+  const ctx=document.getElementById(id)?.getContext('2d');if(!ctx)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:color+'40',borderColor:color,borderWidth:1.5,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.4)',font:{size:9}}},
+            y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.4)',font:{size:9},stepSize:1}}}}});
+}
+
+function renderCharts(){
+  const sb={'0-99':0,'100-199':0,'200-299':0,'300-499':0,'500-749':0,'750-999':0,'1000+':0};
+  allData.forEach(r=>{const s=r.score||0;if(s<100)sb['0-99']++;else if(s<200)sb['100-199']++;else if(s<300)sb['200-299']++;else if(s<500)sb['300-499']++;else if(s<750)sb['500-749']++;else if(s<1000)sb['750-999']++;else sb['1000+']++;});
+  mkChart('chScores',Object.keys(sb),Object.values(sb),'#00ff88');
+  const tb={'0-15s':0,'15-30s':0,'30-60s':0,'1-2m':0,'2-3m':0,'3m+':0};
+  allData.forEach(r=>{const t=r.duration_seconds||0;if(t<15)tb['0-15s']++;else if(t<30)tb['15-30s']++;else if(t<60)tb['30-60s']++;else if(t<120)tb['1-2m']++;else if(t<180)tb['2-3m']++;else tb['3m+']++;});
+  mkChart('chTime',Object.keys(tb),Object.values(tb),'#ff6600');
+}
+
+function buildBar(items,maxV,getV,fmt,color){
+  if(!items.length)return'<div class="empty">Sin datos aún</div>';
+  return items.map(p=>{const v=getV(p);const pct=Math.max(4,Math.round(v/maxV*100));
+    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:110px;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@${p.jugador}</div><div style="flex:1;height:4px;border-radius:2px;background:${color}30"><div style="width:${pct}%;height:100%;border-radius:2px;background:${color};box-shadow:0 0 5px ${color}80"></div></div><div style="font-size:10px;color:${color};min-width:50px;text-align:right">${fmt(v)}</div></div>`;
+  }).join('');
+}
+
+function renderBars(){
+  const pl=byPlayer();
+  const tL=[...pl].sort((a,b)=>b.totalLoops-a.totalLoops).slice(0,12);
+  const tT=[...pl].sort((a,b)=>b.totalTime-a.totalTime).slice(0,12);
+  document.getElementById('barLoops').innerHTML=buildBar(tL,tL[0]?.totalLoops||1,p=>p.totalLoops,v=>v+'x','#aa55ff');
+  document.getElementById('barTime').innerHTML=buildBar(tT,tT[0]?.totalTime||1,p=>p.totalTime,fmtTime,'#ff6600');
+}
+
+loadAll();
+setInterval(loadAll,60000);
+</script>
+</body>
+</html>
